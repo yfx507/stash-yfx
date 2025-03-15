@@ -1,0 +1,6 @@
+scrapers:
+  - name: "Rule34 Hentai Scraper"
+    version: "1.0.0"
+    description: "Scraper for Rule34.xxx, Gelbooru, and e621 to fetch images and metadata for performers."
+    source_url: "https://yourhost.com/rule34_hentai_scraper.py"
+    entry_point: "rule34_hentai_scraper.py"
