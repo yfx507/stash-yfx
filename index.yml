@@ -1,4 +1,3 @@
-scrapers:   
   - name: "Rule34Video DDoS-Guard Bypass"
     version: "1.0.0"
     description: "Rule34Video scraper with automatic DDoS-Guard bypass using undetected_chromedriver. Requires proxy server."
