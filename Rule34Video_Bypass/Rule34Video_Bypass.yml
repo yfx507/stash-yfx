@@ -1,0 +1,93 @@
+name: "Rule34Video (DDoS-Guard Bypass)"
+
+sceneByFragment:
+  action: scrapeXPath
+  queryURL: http://localhost:8890/proxy?url=https://rule34video.com/video/{filename}
+  queryURLReplace:
+    filename:
+      # Strip out everything after the last _
+      - regex: ([^_]+)_.*
+        with: $1
+  scraper: sceneScraper
+
+sceneByURL:
+  - action: scrapeXPath
+    url:
+      - rule34video.com/videos/
+      - rule34video.com/video/
+    queryURL: http://localhost:8890/proxy?url={url}
+    scraper: sceneScraper
+
+sceneByName:
+  action: scrapeXPath
+  queryURL: http://localhost:8890/proxy?url=https://rule34video.com/search/{}
+  scraper: sceneSearch
+
+sceneByQueryFragment:
+  action: scrapeXPath
+  queryURL: "http://localhost:8890/proxy?url={url}"
+  scraper: sceneScraper
+
+xPathScrapers:
+  sceneSearch:
+    common:
+      $searchItem: //div[contains(@class,"item thumb video_")]
+    scene:
+      Title: $searchItem//div[@class="thumb_title"]/text()
+      URL: 
+        selector: $searchItem/a[@class="th js-open-popup"]/@href
+        postProcess:
+          - replace:
+              - regex: '^(.+)$'
+                with: http://localhost:8890/proxy?url=https://rule34video.com$1
+      Image: $searchItem//img/@data-original
+
+  sceneScraper:
+    common:
+      $article: //div[@class="video_tools"]
+    scene:
+      URL: 
+        selector: //link[@rel='canonical']/@href
+        postProcess:
+          - replace:
+              - regex: '^(.+)$'
+                with: $1
+      Title: //div[@class="heading"]//h1
+      Details: 
+        selector: (//div[@id='tab_video_info']/div[@class="row"]/div[@class="label"])[1]//text()
+        concat: "\n"
+      Date:
+        selector: //script[@type="application/ld+json"]
+        postProcess:
+          - replace:
+              - regex: '.+uploadDate": "([^"]+)".+'
+                with: $1
+      Image:
+        selector: //script[@type="application/ld+json"]
+        postProcess:
+          - replace:
+              - regex: '.+thumbnailUrl": "(http[^"]+)".+'
+                with: $1
+      Tags:
+        Name:
+          selector: $article//div[text()="Categories" or text()="Tags"]/following-sibling::a//text()
+          postProcess:
+            - replace:
+                - regex: '^\+.+Suggest$'
+                  with: ""
+      Studio:
+        Name: $article//div[text()="Artist"]/following-sibling::a/span
+        URL: $article//div[text()="Artist"]/following-sibling::a/@href
+
+debug:
+  printHTML: false
+
+driver:
+  headers:
+    - Key: User-Agent
+      Value: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+
+# This scraper requires the DDoS-Guard bypass proxy to be running
+# Start with: python3 stash_ddos_proxy.py
+# The proxy will handle DDoS-Guard challenges automatically using undetected_chromedriver
+
